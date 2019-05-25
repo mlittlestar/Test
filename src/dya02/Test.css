@@ -1,0 +1,30 @@
+.Test {
+  text-align: left;
+}
+
+html,body,#root,.Test {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.Test > .header {
+  height: 100px;
+  background-color: teal;
+  color: #ffffff;
+  padding: 0 2em;
+}
+.Test > .content {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+} 
+
+.Test > .content .nav {
+  width: 200px;
+  border-right: 1px solid #ccc;
+}
+.Test > .content .content-right {
+  flex:1;
+  padding: 1em;
+}
