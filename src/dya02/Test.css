@@ -15,14 +15,33 @@ html,body,#root,.Test {
   padding: 0 2em;
 }
 .Test > .content {
+  
   flex: 1;
   display: flex;
   flex-direction: row;
 } 
 
 .Test > .content .nav {
+  margin: 0;
+  padding: 0;
   width: 200px;
   border-right: 1px solid #ccc;
+}
+
+.Test > .content .nav li{
+  list-style: none;
+  text-align: center;
+  
+}
+
+.Test > .content .nav li:first-child{
+  margin-top: 30px;
+  
+}
+
+.Test > .content .nav a{
+  text-decoration: none;
+  line-height: 40px;
 }
 .Test > .content .content-right {
   flex:1;

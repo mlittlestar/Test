@@ -1,8 +1,16 @@
 //学生管理页面
 import React from 'react';
-import Clock from "./Clock";
 import $ from 'jquery';
 import './Student.css';
+import {Table, Button,Icon,Modal,message} from 'antd';
+import StudentForm from './StudentForm';
+
+// 当服务端异常的时候都会执行该回调
+$.ajaxSetup({
+    error:function(){
+      message.error("服务器端异常")
+    }
+  })
 
 class Student extends React.Component{
 
@@ -10,10 +18,10 @@ class Student extends React.Component{
         super(props);
         this.state={
             stus:[],
-            form:{
-                username:"",
-                gender:""
-            }
+            visible:false,
+            student:{},
+            ids:[]
+            
         }
     }
 
@@ -21,60 +29,6 @@ class Student extends React.Component{
         this.loadStudent();
     }
 
-    
-
-    updStudentById(id){
-        $.get("http://203.195.251.185:8282/student/findStudentById?id="+id,({status,message,data})=>{
-      if(status === 200){
-        // 将查询数据设置到state中
-        this.setState({ form:data })
-      } else {alert (message)}
-    })
-    }
-
-    updateForm = (event)=>{
-        // 1. 获取表单数据
-        alert(JSON.stringify(this.state.form));
-        // 2. 调用后台代码完成保存
-        let url = "http://203.195.251.185:8282/student/updateStudent"
-        $.get(url,this.state.form,({status,message})=>{
-          alert(message);
-          this.loadStudent();
-        })
-            event.preventDefault();
-        }
-
-    //当用户操作表单项改变表单项内容的时候激发，获取表单项内容，改变到state中
-    ChangeHandler=(event)=>{
-        let tagName=event.target.name;
-        let tagVal=event.target.value;
-        this.setState({
-            form:{...this.state.form,...{[tagName]:tagVal}}
-
-        })
-        
-    }
-
-    deleteStudentHandler(id){
-        
-        this.updStudentById(id,({status,message})=>{
-            if(status===200){
-                alert(message);
-                this.loadStudent();
-            }else{
-                alert(message);
-            }
-
-        })
-    }
-
-    //ajax操作，删除
-    delStudentById(id,handler){
-        let url="http://203.195.251.185:8282/student/deleteStudentById?id="+id;
-        $.get(url,function(result){
-            handler(result);    
-        })
-    }
 
     //ajax操作，加载学生信息
     loadStudent(){
@@ -92,78 +46,191 @@ class Student extends React.Component{
     }
 
 
-    // 提交
-  submitForm = (event)=>{
-    // 1. 获取表单数据
-    alert(JSON.stringify(this.state.form));
-    // 2. 调用后台代码完成保存
-    let url = "http://203.195.251.185:8282/student/saveStudent"
-    $.post(url,this.state.form,({status,message})=>{
-      alert(message);
-      this.loadStudent();
-    })
-        event.preventDefault();
+    // 批量删除
+    batchDelete(){
+        Modal.confirm({
+        title: '确认删除吗？',
+        content: 'Some descriptions',
+        okText: 'Yes',
+        okType: 'danger',
+        cancelText: 'No',
+        onOk:()=> {
+            // 编写代码进行删除
+            let url = "http://203.195.251.185:8282/student/batchDelete";
+            $.ajax({
+            url,
+            method:"POST",
+            data:JSON.stringify(this.state.ids),
+            contentType:"application/json",
+            success:({status,message:msg})=>{
+                if(status === 200){
+                message.success(msg);
+                this.loadStudent();
+                } else {
+                message.error(msg)
+                }
+            }
+            })
+        },
+        onCancel() {
+            console.log('Cancel');
+        },
+        });
+
     }
 
+
+    //通过id删除
+    toDelete=(id)=>{
+        Modal.confirm({
+            title: '是否要删除',
+            content: 'Some descriptions',
+            okText: 'Yes',
+            okType: 'danger',
+            cancelText: 'No',
+            onOk:()=> {
+                //进行删除
+                $.get("http://203.195.251.185:8282/student/deleteStudentById?id="+id,({status,message})=>{
+                    if(status===200){
+                        this.loadStudent();
+                    }else{
+                        alert(message);
+                    }
+                })
+            },
+            onCancel() {
+              console.log('Cancel');
+            },
+          });
+    }
+
+
+    // 点击添加按钮的执行函数
+    toAdd(){
+        this.setState({ 
+        visible: true, 
+        student:{}
+        });
+    }
+
+    // 点击修改按钮的执行函数
+    toUpdate(record){
+        this.setState({ 
+        visible: true, 
+        student:record
+        });
+    }
+
+    //模态框的确认
+    handleOk = e => {
+        // 1. 获取表单数据
+           e.preventDefault();
+           this.form.validateFields((err, values) => {
+           if (!err) {
+               console.log(values)
+               let url ="http://203.195.251.185:8282/student/saveStudent";
+               $.post(url,values,({status,message})=>{
+               if(status === 200){
+                   message.success(message)
+                   this.setState({ visible: false, });
+                   // 页面刷新
+                   this.loadStudent();
+           } else {
+                   message.error(message);
+           }
+        })
+       }
+    });
+           // 2. 与后台交互完成保存或更新
+           // 3. 关闭模态框，刷新页面
+           // this.setState({ visible: false, });
+   };
+    //处理模态框的取消
+    handleCancel = e => {
+        this.setState({
+          visible: false,
+        });
+    };
+
+
+    // ref函数
+    studentFormRefs = (form)=>{
+        this.form = form;
+    }
+  
+
     render(){
-        let name="学生管理页面";
-        let {stus,form}=this.state;
+        let {stus}=this.state;
+
+        // ID前面有框
+        const rowSelection = {
+            onChange: (selectedRowKeys, selectedRows) => {
+                this.setState({ids:selectedRowKeys})
+            },
+            getCheckboxProps: record => ({
+              disabled: record.name === 'Disabled User', // Column configuration not to be checked
+              name: record.name,
+            }),
+        };
+
+
+        const columns = [
+            {
+              title: 'ID',
+              dataIndex: 'id',
+              render: text => <a href="javascript:;">{text}</a>,
+            },
+            {
+              title: '姓名',
+              dataIndex: 'username',
+            },
+            {
+              title: '性别',
+              dataIndex: 'gender',
+            },
+            {
+                title: '状态',
+                dataIndex: 'status',
+            },
+            {
+                title: '类型',
+                dataIndex: 'type',
+            },
+            {
+                title: '操作',
+                width:100,
+                align:'center',
+                render: (val,record) =>{
+                    return(
+                        <div>
+                            <Icon type="delete" onClick={this.toDelete.bind(this,record.id)}/>&nbsp;
+                            <Icon type="edit" onClick={this.toUpdate.bind(this,record)}/>&nbsp;
+                            <Icon type="eye"/>
+                        </div>
+                    )
+                }
+            }
+          ];
+
         return(
             <div className="student">
-                <h2>{name}</h2>
-                <h3>学生管理</h3>
-                <Clock/>
-                {JSON.stringify(form)}
-                <form onSubmit={this.submitForm}>
-                    姓名 
-                    <input type='text' name="username" value={form.username}
-                    onChange={this.ChangeHandler}/>
-                    性别 
-                    <input type='text' name="gender" value={form.gender}
-                    onChange={this.ChangeHandler}/>
+                {/* 按钮 */}
+                <div className="btn">
+                    <Button type="primary" onClick={this.toAdd.bind(this)}>添加</Button>&nbsp;
+                    <Button type='danger' onClick={this.batchDelete.bind(this)}>批量删除</Button>
+                </div>
+                {/* 表格 ,bordered代表有竖线*/}
+                <Table rowKey="id" rowSelection={rowSelection} columns={columns} dataSource={this.state.stus} bordered='true'/>
 
-                    <input type="submit" value="提交"/>
-                </form>
-
-                <form onSubmit={this.updateForm}>
-                    姓名 
-                    <input type='text' name="username" value={form.username}
-                    onChange={this.ChangeHandler}/>
-                    性别 
-                    <input type='text' name="gender" value={form.gender}
-                    onChange={this.ChangeHandler}/>
-
-                    <input type="submit" value="修改"/>
-                </form>
-                <table className='tbl'>
-                    <thead>
-                        <tr>
-                            <th>编号</th>
-                            <th>姓名</th>
-                            <th>性别</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        {
-                            stus.map((item,index)=>{
-                                return (
-                                <tr key={item.id}>
-                                    <td><input type='checkbox'/></td>
-                                    <td>{item.username}</td>
-                                    <td>{item.gender}</td>
-                                    <td>
-                                        <span onClick={this.updStudentById.bind(this,item.id)}>更新</span>
-                                        <span onClick={this.deleteStudentHandler.bind(this,item.id)}>删除</span>
-                                    </td>
-                                </tr>
-                                )
-                            })
-                        }
-                        
-                    </tbody>
-                </table>
+                {/* 弹出框 */}
+                <Modal
+                    title="添加学生"
+                    visible={this.state.visible}
+                    onOk={this.handleOk}
+                    onCancel={this.handleCancel}
+                    >
+                     <StudentForm initData={this.state.student} ref={this.studentFormRefs}/>   
+                </Modal>
             </div>
         )
     }

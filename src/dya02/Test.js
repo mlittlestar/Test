@@ -3,7 +3,7 @@ import './Test.css';
 import Student from './Student';
 import Life from './Life';
 import Render from './Render';
-import Course from '../day03/Course';
+import Course from '../day01/Course';
 import Sc from '../day03/Sc';
 import {BrowserRouter,Route,Link,Switch} from 'react-router-dom';
 
