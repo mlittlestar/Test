@@ -1,7 +1,17 @@
 import React from 'react';
 import $ from 'jquery';
-import {Table,Icon,Button,Modal} from 'antd';
+import {Table,Icon,Button,Modal,message} from 'antd';
 import CourseForm from './CourseForm';
+import axios from 'axios';
+
+
+// 当服务端异常的时候都会执行该回调
+$.ajaxSetup({
+  error:function(){
+    message.error("服务器端异常")
+  }
+})
+
 
 
 class Course extends React.Component {
@@ -10,7 +20,8 @@ class Course extends React.Component {
     this.state = {
       courses:[],
       visible:false,
-      course:{}
+      course:{},
+      ids:[]
       
     }
   }
@@ -32,6 +43,41 @@ class Course extends React.Component {
         }
       });
     }
+
+
+    // 批量删除
+    batchDelete(){
+      Modal.confirm({
+      title: '确认删除吗？',
+      content: 'Some descriptions',
+      okText: 'Yes',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk:()=> {
+          // 编写代码进行删除
+          let url = "http://203.195.251.185:8282/course/batchDeleteCourse";
+          $.ajax({
+          url,
+          method:"POST",
+          data:JSON.stringify(this.state.ids),
+          contentType:"application/json",
+          success:({status,message:msg})=>{
+              if(status === 200){
+              message.success(msg);
+              this.loadCourses();
+              } else {
+              message.error(msg)
+              }
+          }
+          })
+      },
+      onCancel() {
+          console.log('Cancel');
+      },
+      });
+
+  }
+
   
     // 通过id删除
     toDelete =(id)=> {
@@ -64,6 +110,7 @@ class Course extends React.Component {
       e.preventDefault();
       this.form.validateFields((err, values) => {
       if (!err) {
+          values.teacherId = values.teacher.teacherId;
           console.log(values)
           let url ="http://203.195.251.185:8282/course/saveCourse";
           $.post(url,values,({status,message})=>{
@@ -100,7 +147,7 @@ class Course extends React.Component {
 
 
   // ref函数
-  studentFormRefs = (form)=>{
+  courseFormRefs = (form)=>{
     this.form = form;
   }
 
@@ -109,7 +156,7 @@ class Course extends React.Component {
 
     const rowSelection = {
       onChange: (selectedRowKeys, selectedRows) => {
-        this.setState(selectedRowKeys,selectedRows);
+        this.setState({ids:selectedRowKeys})
       },
       getCheckboxProps: record => ({
         disabled: record.name === 'Disabled User', // Column configuration not to be checked
@@ -159,9 +206,9 @@ class Course extends React.Component {
       <div className="course">
         {/* 按钮 */}
         <Button type='primary' onClick={this.toAdd.bind(this)}>添加</Button>&nbsp;
-        <Button type='danger'>批量删除</Button>
+        <Button type='danger' onClick={this.batchDelete.bind(this)}>批量删除</Button>
          {/* 表格 */}
-         <Table rowSelection={rowSelection} columns={columns} dataSource={courses} bordered="true"/>
+         <Table rowKey="id" rowSelection={rowSelection} columns={columns} dataSource={courses} bordered="true"/>
          {/* 模态框 */}
          <Modal
                     title="添加课程"
@@ -169,8 +216,8 @@ class Course extends React.Component {
                     onOk={this.handleOk}
                     onCancel={this.handleCancel}
                     >
-                     <CourseForm initData={this.state.course} ref={this.studentFormRefs}/>
-                </Modal>
+                     <CourseForm initData={this.state.course} ref={this.courseFormRefs}/>
+         </Modal>
       </div>
     ) 
   }

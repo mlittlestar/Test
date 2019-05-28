@@ -2,29 +2,19 @@ import React from 'react';
 import $ from 'jquery';
 import {Input,Form,Select} from 'antd';
 
-
 function handleChange(value) {
-    console.log(`selected ${value}`);
-  }
+  console.log(`selected ${value}`);
+}
+
 
 class CourseForm extends React.Component{
     constructor(){
         super();
         this.state={
-            teachers:[]
+            teachers:[],
+            // id:[]
         }
     }
-
-//校验
-handleSubmit = e => {
-    e.preventDefault();
-    this.props.form.validateFields((err, values) => {
-      if (!err) {
-        console.log('Received values of form: ', values);
-      }
-    });
-};
-
 
     // 网络初始化
   componentWillMount(){
@@ -45,6 +35,10 @@ handleSubmit = e => {
         });
       }
 
+      // handleChange=e=>{
+      //   e.preventDefault();
+      //   this.setState({id})
+      // }
 
      //校验
      handleSubmit = e => {
@@ -56,6 +50,12 @@ handleSubmit = e => {
         });
     };
 
+    // handleChange=value=> {
+    //   this.setState({
+    //     teachers:value
+    //   })
+    // }
+
 
     render(){
         let {teachers}=this.state;
@@ -66,6 +66,13 @@ handleSubmit = e => {
         return(
             <div className="courseform">
                 <Form onSubmit={this.handleSubmit} className="login-form">
+                <Form.Item label="课程编号">
+                        {getFieldDecorator('id', {
+                            rules: [{ required: true, message: 'Please input your id!' }],
+                        })(
+                            <Input placeholder="id"/>,
+                        )}
+                    </Form.Item>
                     <Form.Item label="课程姓名">
                         {getFieldDecorator('name', {
                             rules: [{ required: true, message: 'Please input your name!' }],
@@ -80,11 +87,18 @@ handleSubmit = e => {
                             <Input placeholder="credit"/>,
                         )}
                     </Form.Item>
-                    <Select defaultValue={teachers.teacherId} style={{ width: 120 }} onChange={handleChange}>
-                        {teachers.map(teacher => (
-                            <Option key={teacher.id}>{teacher.username}</Option>
-                        ))}
-                    </Select>
+                    <Form.Item label="老师">
+                        {getFieldDecorator('teacher.teacherId', {
+                            initialValue: '泡芙',
+                        })(
+                          <Select defaultValue={teachers.teacherId} style={{ width: 120 }} onChange={handleChange}>
+                            {teachers.map(teacher => (
+                                <Option key={teacher.id}>{teacher.username}</Option>
+                            ))}
+                          </Select>
+                        )}
+                    </Form.Item>
+                    
                 </Form>
             </div>
         )
