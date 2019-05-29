@@ -110,7 +110,6 @@ class Course extends React.Component {
       e.preventDefault();
       this.form.validateFields((err, values) => {
       if (!err) {
-          values.teacherId = values.teacher.teacherId;
           console.log(values)
           let url ="http://203.195.251.185:8282/course/saveCourse";
           $.post(url,values,({status,message})=>{

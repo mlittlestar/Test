@@ -88,10 +88,8 @@ class CourseForm extends React.Component{
                         )}
                     </Form.Item>
                     <Form.Item label="老师">
-                        {getFieldDecorator('teacher.teacherId', {
-                            initialValue: '泡芙',
-                        })(
-                          <Select defaultValue={teachers.teacherId} style={{ width: 120 }} onChange={handleChange}>
+                        {getFieldDecorator('teacherId')(
+                          <Select defaultValue={teachers.teacherId} style={{ width: 120 }} onChange={handleChange} placeholder="Select">
                             {teachers.map(teacher => (
                                 <Option key={teacher.id}>{teacher.username}</Option>
                             ))}
