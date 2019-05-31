@@ -1,17 +1,33 @@
 import React from 'react'
-import {Table,Button,Form} from 'antd'
+import axios from './http/index';
+import {Table,Button,message} from 'antd'
 import {connect} from 'react-redux'
 
 class Teacher extends React.Component {
   constructor(props){
     super(props);
-   
+    this.state = {
+      list:[]
+    }
   }
   componentWillMount(){
-    
+    axios.get('/student/findAllByType')
+    .then((result)=>{
+      this.setState({
+        list:result.data
+      })
+    })
   }
   deleteHandler(id){
-    
+    axios.get('/student/deleteStudentById',{
+      params:{id}
+    })
+    .then((result)=>{
+      if(result){
+        message.success(result.statusText)
+        
+      }
+    })
   }
 
   render(){
@@ -39,20 +55,10 @@ class Teacher extends React.Component {
     return (
       <div className="teacher">
         <h2>教师管理</h2>
-        <div>
-          {JSON.stringify(this.props)}
-        </div>
+        <Table rowKey="id" size="small" columns={columns} dataSource={this.state.list}/>
       </div>
     )
   }
 }
 
-
-// 将store中的state映射到当前组件的props上
-let mapStateToProps = (state)=>{
-  return state;
-}
-
-
-
-export default connect(mapStateToProps)(Form.create()(Teacher));
+export default Teacher;
