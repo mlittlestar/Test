@@ -81,7 +81,7 @@ class ScForm extends React.Component{
 
                     <Form.Item label="学生姓名">
                         {getFieldDecorator('studentId')(
-                          <Select defaultValue={students.sutdentId} style={{ width: 120 }} onChange={handleChange} placeholder="Select">
+                          <Select defaultValue={students.studentId} style={{ width: 120 }} onChange={handleChange} placeholder="Select">
                             {students.map(student => (
                                 <Option key={student.id}>{student.username}</Option>
                             ))}
